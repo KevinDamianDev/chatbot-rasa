@@ -1,0 +1,138 @@
+version: "3.1"
+rules:
+
+- rule: Autenticación al inicio
+  steps:
+    - intent: autenticar_apoderado
+    - action: form_autenticacion
+    - active_loop: form_autenticacion
+
+- rule: Confirmar autenticación
+  condition:
+    - active_loop: form_autenticacion
+  steps:
+    - action: form_autenticacion
+    - active_loop: null
+    - action: action_guardar_datos_apoderado
+    - action: action_mostrar_alumnos
+
+- rule: Consultar notas directamente
+  steps:
+    - intent: consultar_notas
+    - action: submit_consultar_notas
+
+- rule: Consultar eventos
+  steps:
+    - intent: consultar_eventos
+    - action: action_consultar_eventos
+
+- rule: Cambiar alumno
+  steps:
+    - intent: cambiar_alumno
+    - action: action_cambiar_alumno
+
+- rule: Saludo
+  steps:
+    - intent: greet
+    - action: utter_greet
+
+- rule: Seleccionar alumno
+  steps:
+    - intent: seleccionar_alumno
+    - action: action_seleccionar_alumno
+
+# Nuevas reglas para cada tipo de asistencia
+- rule: Consultar últimas asistencias
+  steps:
+    - intent: ver_ultimas_asistencias
+    - action: action_consultar_ultimas_asistencias
+
+- rule: Consultar solo faltas
+  steps:
+    - intent: ver_faltas
+    - action: action_consultar_solo_faltas
+
+- rule: Consultar resumen mensual
+  steps:
+    - intent: ver_resumen_mensual
+    - action: action_consultar_resumen_asistencia
+
+- rule: Consultar historial completo
+  steps:
+    - intent: ver_historial_asistencia
+    - action: action_consultar_historial_asistencia
+
+- rule: Seleccionar alumno
+  steps:
+    - intent: seleccionar_numero
+    - action: action_seleccionar_numero
+
+- rule: Afirmación del usuario
+  steps:
+    - intent: affirm
+    - action: utter_greet
+
+- rule: Negación del usuario
+  steps:
+    - intent: deny
+    - action: utter_greet
+
+- rule: Despedida
+  steps:
+    - intent: goodbye
+    - action: utter_goodbye
+
+- rule: Mostrar submenú de asistencia
+  steps:
+    - intent: consultar_asistencia
+    - action: action_activar_filtro_asistencia
+
+- rule: Volver al menú principal desde asistencias
+  steps:
+    - intent: volver_menu
+    - action: action_mostrar_menu
+
+- rule: Rechazar ingreso como alumno
+  steps:
+    - intent: soy_alumno
+    - action: utter_no_soy_apoderado
+
+- rule: Consultar observaciones
+  steps:
+    - intent: consultar_observaciones
+    - action: action_consultar_observaciones
+
+- rule: Consultar horario
+  steps:
+    - intent: consultar_horario
+    - action: action_consultar_horario
+
+- rule: Consultar docente
+  steps:
+    - intent: consultar_docente
+    - action: action_consultar_docente
+
+- rule: Consultar estado de matrícula
+  steps:
+    - intent: consultar_estado_matricula
+    - action: action_consultar_estado_matricula
+
+- rule: Responder a 'quién eres'
+  steps:
+    - intent: quien_eres
+    - action: utter_quien_eres
+
+- rule: Cerrar sesión
+  steps:
+    - intent: cerrar_sesion
+    - action: action_cerrar_sesion
+
+- rule: Manejo por defecto de mensajes no entendidos
+  steps:
+    - intent: nlu_fallback
+    - action: action_default_fallback
+
+- rule: Mostrar ayuda
+  steps:
+    - intent: ayuda
+    - action: utter_ayuda

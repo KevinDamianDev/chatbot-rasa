@@ -1,0 +1,43 @@
+version: "3.1"
+
+stories:
+
+- story: Autenticación de apoderado
+  steps:
+    - intent: autenticar_apoderado
+    - action: form_autenticacion
+    - active_loop: form_autenticacion
+
+- story: Finaliza autenticación y muestra alumnos
+  steps:
+    - action: form_autenticacion
+    - active_loop: null
+    - action: action_guardar_datos_apoderado
+    - action: action_mostrar_alumnos
+
+# ====== CONSULTAS DIRECTAS SIN SUBMENÚ ======
+
+- story: Ver últimas asistencias
+  steps:
+    - intent: ver_ultimas_asistencias
+    - action: action_consultar_ultimas_asistencias
+
+- story: Ver solo faltas
+  steps:
+    - intent: ver_faltas
+    - action: action_consultar_solo_faltas
+
+- story: Ver resumen mensual de asistencia
+  steps:
+    - intent: ver_resumen_mensual
+    - action: action_consultar_resumen_asistencia
+
+- story: Ver historial completo de asistencia
+  steps:
+    - intent: ver_historial_asistencia
+    - action: action_consultar_historial_asistencia
+
+- story: Selección de alumno
+  steps:
+    - intent: seleccionar_numero
+    - action: action_seleccionar_numero

@@ -1,0 +1,81 @@
+{
+  "type": "IntentMaxHistoryTrackerFeaturizer",
+  "state_featurizer": {
+    "action_texts": [],
+    "entity_tag_specs": [],
+    "feature_states": {
+      "intent": {
+        "affirm": 0,
+        "autenticar_apoderado": 1,
+        "back": 2,
+        "cambiar_alumno": 3,
+        "consultar_asistencia": 4,
+        "consultar_eventos": 5,
+        "consultar_notas": 6,
+        "deny": 7,
+        "filtrar_asistencia": 8,
+        "goodbye": 9,
+        "greet": 10,
+        "nlu_fallback": 11,
+        "out_of_scope": 12,
+        "restart": 13,
+        "seleccionar_alumno": 14,
+        "seleccionar_numero": 15,
+        "session_start": 16
+      },
+      "action_name": {
+        "action_listen": 0,
+        "action_restart": 1,
+        "action_session_start": 2,
+        "action_default_fallback": 3,
+        "action_deactivate_loop": 4,
+        "action_revert_fallback_events": 5,
+        "action_default_ask_affirmation": 6,
+        "action_default_ask_rephrase": 7,
+        "action_two_stage_fallback": 8,
+        "action_unlikely_intent": 9,
+        "action_back": 10,
+        "...": 11,
+        "action_extract_slots": 12,
+        "submit_consultar_notas": 13,
+        "action_consultar_asistencia": 14,
+        "action_consultar_eventos": 15,
+        "validate_consultar_notas_form": 16,
+        "action_guardar_datos_apoderado": 17,
+        "validate_form_autenticacion": 18,
+        "action_mostrar_alumnos": 19,
+        "action_seleccionar_alumno": 20,
+        "action_cambiar_alumno": 21,
+        "action_pedir_filtro_asistencia": 22,
+        "action_filtrar_asistencia": 23,
+        "action_seleccionar_numero": 24,
+        "action_mostrar_menu": 25,
+        "utter_ask_apellido_alumno": 26,
+        "utter_ask_nombre_alumno": 27,
+        "utter_ask_telefono_apoderado": 28,
+        "utter_confirm_autenticacion": 29,
+        "utter_default": 30,
+        "utter_eleccion_invalida": 31,
+        "utter_filtro_invalido": 32,
+        "utter_goodbye": 33,
+        "utter_greet": 34,
+        "utter_menu_opciones": 35,
+        "utter_numero_fuera_de_rango": 36,
+        "utter_pedir_filtro_asistencia": 37,
+        "utter_pedir_seleccion_alumno": 38,
+        "form_autenticacion": 39
+      },
+      "entities": {
+        "apellido_alumno": 0,
+        "nombre_alumno": 1,
+        "telefono_apoderado": 2
+      },
+      "slots": {},
+      "active_loop": {
+        "form_autenticacion": 0
+      }
+    }
+  },
+  "remove_duplicates": true,
+  "max_history": 5
+}

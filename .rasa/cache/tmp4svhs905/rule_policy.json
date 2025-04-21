@@ -1,0 +1,44 @@
+{
+  "lookup": {
+    "rules": {
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"autenticar_apoderado\"}}]": "form_autenticacion",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"autenticar_apoderado\"}}, {\"active_loop\": {\"name\": \"form_autenticacion\"}, \"prev_action\": {\"action_name\": \"form_autenticacion\"}, \"user\": {\"intent\": \"autenticar_apoderado\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"cambiar_alumno\"}}]": "action_cambiar_alumno",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"cambiar_alumno\"}}, {\"prev_action\": {\"action_name\": \"action_cambiar_alumno\"}, \"user\": {\"intent\": \"cambiar_alumno\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"seleccionar_alumno\"}}]": "action_seleccionar_alumno",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"seleccionar_alumno\"}}, {\"prev_action\": {\"action_name\": \"action_seleccionar_alumno\"}, \"user\": {\"intent\": \"seleccionar_alumno\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consultar_notas\"}}]": "submit_consultar_notas",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consultar_notas\"}}, {\"prev_action\": {\"action_name\": \"submit_consultar_notas\"}, \"user\": {\"intent\": \"consultar_notas\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consultar_eventos\"}}]": "action_consultar_eventos",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consultar_eventos\"}}, {\"prev_action\": {\"action_name\": \"action_consultar_eventos\"}, \"user\": {\"intent\": \"consultar_eventos\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"seleccionar_numero\"}}]": "action_seleccionar_numero",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"seleccionar_numero\"}}, {\"prev_action\": {\"action_name\": \"action_seleccionar_numero\"}, \"user\": {\"intent\": \"seleccionar_numero\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"greet\"}}]": "action_session_start",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"greet\"}}, {\"prev_action\": {\"action_name\": \"action_session_start\"}, \"user\": {\"intent\": \"greet\"}}]": "action_listen",
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"form_autenticacion\"}}]": "action_guardar_datos_apoderado",
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"form_autenticacion\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"action_guardar_datos_apoderado\"}}]": "action_mostrar_alumnos",
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"form_autenticacion\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"action_guardar_datos_apoderado\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"action_mostrar_alumnos\"}}]": "action_listen"
+    },
+    "rule_only_slots": [],
+    "rule_only_loops": [],
+    "rules_for_loop_unhappy_path": {
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}}, {\"active_loop\": {\"name\": \"form_autenticacion\"}, \"prev_action\": {\"action_name\": \"form_autenticacion\"}, \"user\": {\"intent\": \"autenticar_apoderado\"}}]": "do_not_predict_loop_action"
+    },
+    "rules_not_in_stories": [
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"greet\"}}, {\"prev_action\": {\"action_name\": \"action_session_start\"}, \"user\": {\"intent\": \"greet\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consultar_notas\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consultar_notas\"}}, {\"prev_action\": {\"action_name\": \"submit_consultar_notas\"}, \"user\": {\"intent\": \"consultar_notas\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consultar_eventos\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"greet\"}}]",
+      "predicting default action with intent session_start",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"cambiar_alumno\"}}, {\"prev_action\": {\"action_name\": \"action_cambiar_alumno\"}, \"user\": {\"intent\": \"cambiar_alumno\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"seleccionar_alumno\"}}, {\"prev_action\": {\"action_name\": \"action_seleccionar_alumno\"}, \"user\": {\"intent\": \"seleccionar_alumno\"}}]",
+      "predicting default action with intent restart",
+      "handling active loops and forms - form_autenticacion",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"cambiar_alumno\"}}]",
+      "predicting default action with intent back",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consultar_eventos\"}}, {\"prev_action\": {\"action_name\": \"action_consultar_eventos\"}, \"user\": {\"intent\": \"consultar_eventos\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"seleccionar_alumno\"}}]"
+    ]
+  }
+}

@@ -1,0 +1,302 @@
+version: "3.1"
+nlu:
+- intent: consultar_notas
+  examples: |
+    - notas
+    - ver notas
+    - calificaciones
+    - quiero las calificaciones
+    - quiero ver cómo va en sus cursos
+    - dime sus notas
+    - dime las calificaciones
+    - cómo van sus notas
+    - mis notas
+    - sus notas
+    - mostrar notas
+    - mostrar calificaciones
+    - nota
+    - quierovernotas
+    - calificacion
+    - sus calificaciones
+    - vercalificaciones
+    - quiero ver lasnotas
+    - kiero ver notas
+
+
+
+- intent: consultar_eventos
+  examples: |
+    - ¿Cuáles son los próximos eventos?
+    - ¿Hay alguna reunión pronto?
+    - ¿Qué eventos hay en la escuela?
+    - eventos
+    - ver eventos
+    - hay eventos
+    - qué reuniones hay
+    - qué actividades hay
+    - próximos eventos
+    - próximos comunicados
+    - qué actividades vienen
+    - dime los eventos escolares
+    - actividades escolares
+    - eventos por venir
+    - qué actividades hay hoy
+    - hay una reunión?
+    - comunicados
+    - comunicados nuevos
+    - avisos del colegio
+
+
+- intent: greet
+  examples: |
+    - Hola
+    - Buenas
+    - Buenos días
+    - Buenas tardes
+    - Buenas noches
+    - Qué tal
+    - Hola, ¿cómo estás?
+    - Hola bot
+    - Hey
+    
+- intent: goodbye
+  examples: |
+    - Adiós
+    - Hasta luego
+    - Chau
+    - Me voy
+    - Nos vemos
+    - Bye
+
+- intent: affirm
+  examples: |
+    - Sí
+    - Claro
+    - Por supuesto
+    - Así es
+    - Correcto
+
+- intent: deny
+  examples: |
+    - No
+    - Para nada
+    - Nope
+    - No quiero
+
+- intent: autenticar_apoderado
+  examples: |
+    - Soy apoderado
+    - Quiero iniciar sesión
+    - Quiero ingresar como apoderado
+    - Autenticarme
+    - Quiero registrarme
+    - Soy el representante del estudiante
+    - Empezar como apoderado
+
+- intent: seleccionar_alumno
+  examples: |
+    - Quiero seleccionar a un estudiante
+    - Selecciono al primero
+    - Elijo al segundo estudiante
+    - Muéstrame a mi hijo
+    - Deseo ver a mi representado
+    - Ver el alumno asignado
+    - Elegir estudiante
+    - El estudiante número uno
+    - Escoger el alumno adecuado
+
+- intent: cambiar_alumno
+  examples: |
+    - quiero cambiar de alumno
+    - cambiar estudiante
+    - seleccionar otro hijo
+    - elige otro alumno
+    - quiero consultar a otro estudiante
+    - quiero ver las notas de otro hijo
+
+- intent: consultar_asistencia
+  examples: |
+    - Quiero ver la asistencia
+    - asistencias
+    - consultar asistencias
+    - ver asistencias
+    - deseo saber la asistencia de mi hijo
+    - asistencoas
+    - asistensias
+    - las asistencia
+    - quiero las asistencias
+    - quiero asistencoas
+    - asistencias
+    - ver asistencias
+    - asistencia
+    - quiero saber si fue al colegio
+    - cuántas veces asistió
+    - dime su asistencia
+    - dime si asistió
+    - cómo va en asistencia
+    - faltó a clases
+    - asistencia de mi hijo
+    - asistensia
+    - asistencia xfa
+    - quiero ver si fue
+    - fue al cole hoy?
+    - revisar asistencia
+    - fue a la escuela
+
+
+- intent: ver_ultimas_asistencias
+  examples: |
+    - Quiero ver las últimas asistencias
+    - Últimas asistencias por favor
+    - Muéstrame las asistencias más recientes
+    - Ver asistencias recientes
+    - Dime las últimas asistencias de mi hijo
+    - Cómo fueron las últimas clases
+    - Últimas clases a las que asistió
+
+
+- intent: ver_faltas
+  examples: |
+    - Solo quiero ver las faltas
+    - Muéstrame las inasistencias
+    - Ver solo ausencias
+    - Cuántas veces faltó
+    - Dime solo las faltas
+    - Cuántas veces se ausentó
+    - Ver inasistencias recientes
+
+
+- intent: ver_resumen_mensual
+  examples: |
+    - Ver resumen mensual
+    - Resumen de asistencias por mes
+    - Muéstrame el resumen mensual de asistencia
+
+- intent: ver_historial_asistencia
+  examples: |
+    - Ver historial completo de asistencia
+    - Quiero todo el historial de asistencias
+    - Historial de asistencia por favor
+
+- intent: seleccionar_numero
+  examples: |
+    - elijo el 1
+    - selecciono el 2
+    - quiero la opción 3
+    - me quedo con la 4
+    - número uno
+    - número dos
+    - número tres
+    - número cuatro
+    - uno
+    - dos
+    - tres
+    - cuatro
+    - 1
+    - 2
+    - 3
+    - 4
+
+- intent: volver_menu
+  examples: |
+    - volver al menú
+    - regresar al menú
+    - regresar al inicio
+    - volver al menú principal
+    - menú
+    - quiero volver al menú
+    - salir del submenú
+    - ir al inicio
+    - volver
+    - menu
+    - meunu
+    - menpu
+    - volver al menú
+    - regreso al menú
+    - inicio
+
+- intent: soy_alumno
+  examples: |
+    - soy alumno
+    - soy un alumno
+    - soy estudiante
+    - quiero entrar como alumno
+    - quiero consultar como estudiante
+    - soy el estudiante
+    - quiero acceder como alumno
+    - soy yo el alumno
+    - soy quien estudia
+    - vengo como alumno
+    - soy el hijo
+    - quiero ingresar como estudiante
+    - no soy apoderado, soy alumno
+    - soy el que estudia
+    - estoy en clases, soy alumno
+    - soy estudiante, no apoderado
+    - no soy representante
+    - el alumno soy yo
+    - quiero ver mi información
+
+- intent: consultar_observaciones
+  examples: |
+    - Quiero ver las observaciones del docente
+    - Dime las observaciones
+    - ¿Qué dijo el profesor?
+    - Observaciones
+    - Comentarios del docente
+
+- intent: consultar_horario
+  examples: |
+    - Ver horario de clases
+    - ¿Cuál es su horario?
+    - Horario
+    - Muéstrame el horario
+
+- intent: consultar_docente
+  examples: |
+    - Información del docente
+    - ¿Quién es su profesor?
+    - Dime el nombre del docente
+    - Datos del profesor
+
+- intent: consultar_estado_matricula
+  examples: |
+    - Estado de matrícula
+    - ¿Está matriculado?
+    - En qué grado está
+    - ¿Cuál es su grado?
+    - Estado del estudiante
+
+- intent: quien_eres
+  examples: |
+    - quién eres
+    - quién está hablando
+    - quién me responde
+    - qué eres tú
+    - eres un bot
+    - eres una persona
+    - con quién hablo
+    - qué tipo de asistente eres
+    - eres un asistente?
+
+- intent: cerrar_sesion
+  examples: |
+    - cerrar sesión
+    - salir de mi cuenta
+    - terminar sesión
+    - desloguearme
+    - quiero cerrar sesión
+    - cerrar mi cuenta
+    - finalizar sesión
+    - salir
+    - terminar
+    - cerrar
+
+- intent: ayuda
+  examples: |
+    - ¿Qué puedes hacer?
+    - ¿Cómo te uso?
+    - ¿Qué información me puedes dar?
+    - ¿Cuáles son tus funciones?
+    - ¿Qué puedes responder?
+    - ¿Cómo te consulto?

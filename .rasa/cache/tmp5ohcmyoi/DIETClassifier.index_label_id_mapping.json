@@ -1,0 +1,13 @@
+{
+  "0": "affirm",
+  "1": "autenticar_apoderado",
+  "2": "cambiar_alumno",
+  "3": "consultar_asistencia",
+  "4": "consultar_eventos",
+  "5": "consultar_notas",
+  "6": "deny",
+  "7": "goodbye",
+  "8": "greet",
+  "9": "seleccionar_alumno",
+  "10": "seleccionar_numero"
+}
