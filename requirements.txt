@@ -1,4 +1,4 @@
-rasa==3.6.12
+rasa==3.5.10
 mysql-connector-python
 python-dotenv
 bcrypt
