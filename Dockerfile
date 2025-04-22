@@ -26,6 +26,6 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Expone el puerto que Render asigna dinámicamente
-EXPOSE 5005
+EXPOSE ${PORT}
 
 CMD ["sh", "-c", "rasa run --enable-api --cors '*' --debug --port $PORT"]
