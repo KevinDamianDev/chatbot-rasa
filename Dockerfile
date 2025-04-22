@@ -29,4 +29,4 @@ RUN pip install -r requirements.txt
 EXPOSE 5005
 
 # Comando por defecto para ejecutar Rasa
-CMD ["sh", "-c", "rasa run --enable-api --cors '*' --debug --port ${PORT:-5005}"]
+CMD ["sh", "-c", "rasa run --enable-api --cors '*' --debug --port ${PORT}"]

@@ -4,6 +4,3 @@ services:
     env: docker
     plan: free
     dockerfilePath: ./Dockerfile
-    envVars:
-      - key: PORT
-        value: 5005
