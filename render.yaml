@@ -1,9 +1,9 @@
 services:
   - type: web
     name: chatbot-rasa
-    runtime: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "rasa run --enable-api --cors '*' --debug"
+    env: docker               # <- Aquí es "docker", no "python"
+    plan: free
+    dockerfilePath: ./Dockerfile  # <- Asegúrate que esté bien la ruta al Dockerfile
     envVars:
-      - key: RASA_ENV
-        value: production
+      - key: PORT
+        value: 5005
