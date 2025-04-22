@@ -25,8 +25,7 @@ RUN pip install --upgrade pip
 # Instala las dependencias del proyecto
 RUN pip install -r requirements.txt
 
-# Expone el puerto por defecto de Rasa
+# Expone el puerto que Render asigna dinámicamente
 EXPOSE 5005
 
-# Comando por defecto para ejecutar Rasa
-CMD exec rasa run --enable-api --cors "*" --debug --port ${PORT}
+CMD ["sh", "-c", "rasa run --enable-api --cors '*' --debug --port $PORT"]
