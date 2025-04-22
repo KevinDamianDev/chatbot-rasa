@@ -1,6 +1,5 @@
 *.pyc
 __pycache__/
-models/
 venv/
 venv38/
 .env
