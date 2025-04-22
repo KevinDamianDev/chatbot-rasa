@@ -2,9 +2,8 @@ services:
   - type: web
     name: chatbot-rasa
     runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: rasa run --enable-api --cors "*" --port 5055
-    env: python
     pythonVersion: 3.10.13
+    buildCommand: pip install -r requirements.txt
+    startCommand: rasa run --enable-api --cors "*" --port 5005
     plan: free
     region: oregon
