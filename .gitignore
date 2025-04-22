@@ -7,3 +7,5 @@ venv38/
 *.db
 *.sqlite3
 .DS_Store
+# Ignorar la caché de Rasa
+.rasa/cache/
