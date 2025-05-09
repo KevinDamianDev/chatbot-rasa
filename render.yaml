@@ -1,6 +1,7 @@
 services:
   - type: web
-    name: chatbot-rasa
+    name: chatbot-rasa       # puedes ponerle el nombre que ya tengas
     env: docker
     plan: free
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: Dockerfile
+    internalPort: 10000      # el puerto que efectivamente abre Rasa
