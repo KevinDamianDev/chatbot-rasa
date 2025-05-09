@@ -1,11 +1,9 @@
 services:
   - type: web
-    name: chatbot-rasa
+    name: rasa-bot
     env: docker
     plan: free
     dockerfilePath: Dockerfile
     internalPort: 10000
-    startCommand: >
-      rasa run --enable-api --cors "*" --debug
-      --interface 0.0.0.0 --port $PORT
+    startCommand: rasa run --enable-api --cors "*" --debug --interface 0.0.0.0 --port 10000
     healthCheckPath: /status
