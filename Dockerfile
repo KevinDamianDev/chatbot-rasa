@@ -21,4 +21,4 @@ EXPOSE 10000
 # 2) (opcional) puedes seguir como root o volver al usuario por defecto
 # USER 1001
 
-ENTRYPOINT ["./start.sh"]
+CMD ["./start.sh"]
