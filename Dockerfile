@@ -1,19 +1,22 @@
-# syntax=docker/dockerfile:1
-FROM rasa/rasa:3.5.10-full AS base
+FROM rasa/rasa:3.5.10-full
 
 WORKDIR /app
 
-# Copiamos sólo lo imprescindible
-COPY config.yml        .
-COPY credentials.yml   .
-COPY domain.yml        .
-COPY endpoints.yml     .
-COPY data/             ./data
-COPY actions/          ./actions
-COPY models/           ./models
+# Copia solo lo necesario
+COPY config.yml       .
+COPY credentials.yml  .
+COPY domain.yml       .
+COPY endpoints.yml    .
+COPY data/            ./data
+COPY actions/         ./actions
+COPY models/          ./models
 
-# Exponemos el puerto que Render usará
+# Copia y marca ejecutable el script
+COPY start.sh         .
+RUN chmod +x start.sh
+
+# Exponemos el puerto que Render asigna (10000 por defecto en web services free)
 EXPOSE 10000
 
-# Arrancamos Rasa escuchando en $PORT (10000 por defecto en Render)
-CMD ["rasa","run","--enable-api","--cors","*","--debug","--interface","0.0.0.0","--port","$PORT"]
+# Entrypoint = nuestro wrapper
+ENTRYPOINT ["./start.sh"]
