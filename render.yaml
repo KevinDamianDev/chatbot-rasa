@@ -1,7 +1,13 @@
 services:
   - type: web
-    name: chatbot-rasa       # puedes ponerle el nombre que ya tengas
+    name: chatbot-rasa
     env: docker
     plan: free
     dockerfilePath: Dockerfile
-    internalPort: 10000      # el puerto que efectivamente abre Rasa
+    internalPort: 10000
+    # le indicas a Render exactamente cómo arrancar la app
+    startCommand: >
+      rasa run --enable-api --cors "*" --debug
+      --interface 0.0.0.0 --port $PORT
+    # opcionalmente vuelves a declarar el health-check
+    healthCheckPath: /status

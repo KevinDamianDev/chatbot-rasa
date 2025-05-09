@@ -30,4 +30,4 @@ EXPOSE 5005
 
 #CMD ["sh", "-c", "echo Assigned PORT is $PORT && rasa run --enable-api --cors '*' --debug --port $PORT"]
 
-CMD PORT=${PORT:-5005} && echo "🔌 Listening on port $PORT" && exec rasa run --enable-api --cors '*' --debug --interface 0.0.0.0 --port $PORT
+#CMD PORT=${PORT:-5005} && echo "🔌 Listening on port $PORT" && exec rasa run --enable-api --cors '*' --debug --interface 0.0.0.0 --port $PORT
