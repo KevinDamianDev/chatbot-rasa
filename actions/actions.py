@@ -1,7 +1,8 @@
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import os
+from rasa_sdk.events import SlotSet, ActiveLoop
 
-load_dotenv()
+# load_dotenv()
 
 import asyncio
 import sys
@@ -36,57 +37,97 @@ class ValidateConsultarNotasForm(FormValidationAction):
         return "validate_consultar_notas_form"
     
 class SubmitConsultarNotas(Action):
-    def name(self):
+    def name(self) -> str:
         return "submit_consultar_notas"
 
     def run(self, dispatcher, tracker, domain):
+        # 1) Validar autenticación
         if not tracker.get_slot("autenticado"):
-            dispatcher.utter_message(text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. Escribe 'Soy apoderado' para comenzar.")
+            dispatcher.utter_message(
+                text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. "
+                     "Escribe 'Soy apoderado' para comenzar."
+            )
             return []
 
-        nombre_alumno = tracker.get_slot("nombre_alumno")
-        apellido_alumno = tracker.get_slot("apellido_alumno")
+        # 2) Leer los slots
+        nombre_slot   = (tracker.get_slot("nombre_alumno") or "").strip()
+        apellido_slot = (tracker.get_slot("apellido_alumno") or "").strip()
+
+        # 3) Si apellido_slot tiene >2 tokens, el primero es en realidad
+        #    el segundo nombre del alumno, así que lo movemos a nombre_slot.
+        ap_tokens = apellido_slot.split()
+        if len(ap_tokens) > 2:
+            # Extraigo el primer token como segundo nombre
+            segundo_nombre = ap_tokens.pop(0)
+            nombre_slot = (nombre_slot + " " + segundo_nombre).strip()
+            apellido_slot = " ".join(ap_tokens)
+
+        # Debug: comprueba cómo quedó cada slot
+        print(f"🔍 nombre_slot final:   '{nombre_slot}'")
+        print(f"🔍 apellido_slot final: '{apellido_slot}'")
+
+        # 4) Construir filtros:
+        #    - Nombre: usamos todo nombre_slot (uno o dos nombres)
+        filtro_nombre = nombre_slot
+
+        #    - Apellidos: últimos dos tokens si hay >=2, o el único si hay uno
+        ap_tokens = apellido_slot.split()
+        if len(ap_tokens) >= 2:
+            filtro_apellidos = f"{ap_tokens[-2]} {ap_tokens[-1]}"
+        elif len(ap_tokens) == 1:
+            filtro_apellidos = ap_tokens[0]
+        else:
+            filtro_apellidos = ""
+
+        # Debug final antes de consulta
+        print(f"🔍 filtro_nombre:     '{filtro_nombre}'")
+        print(f"🔍 filtro_apellidos: '{filtro_apellidos}'")
 
         try:
             db = connect_db()
             cursor = db.cursor()
 
             query = """
-            SELECT 
-                c.nombre_curso, 
-                e.nombre_evaluacion, 
-                ce.fecha_evaluacion,
-                n.nota
-            FROM apoderado ap
-            JOIN persona pa ON ap.id_persona = pa.id_persona
-            JOIN apoderado_alumno aa ON ap.id_apoderado = aa.id_apoderado
-            JOIN alumno a ON aa.id_alumno = a.id_alumno
-            JOIN persona p ON a.id_persona = p.id_persona
-            JOIN nota n ON a.id_alumno = n.id_alumno
-            JOIN curso_evaluacion ce ON n.id_curso_evaluacion = ce.id_curso_evaluacion
-            JOIN curso c ON ce.id_curso = c.id_curso
-            JOIN evaluacion e ON ce.id_evaluacion = e.id_evaluacion
+                SELECT 
+                    c.nombre_curso, 
+                    e.nombre_evaluacion, 
+                    ce.fecha_evaluacion,
+                    n.nota
+                FROM apoderado ap
+                JOIN persona pa              ON ap.id_persona       = pa.id_persona
+                JOIN apoderado_alumno aa     ON ap.id_apoderado     = aa.id_apoderado
+                JOIN alumno a                ON aa.id_alumno        = a.id_alumno
+                JOIN persona p               ON a.id_persona        = p.id_persona
+                JOIN nota n                  ON a.id_alumno         = n.id_alumno
+                JOIN curso_evaluacion ce     ON n.id_curso_evaluacion = ce.id_curso_evaluacion
+                JOIN curso c                 ON ce.id_curso         = c.id_curso
+                JOIN evaluacion e            ON ce.id_evaluacion    = e.id_evaluacion
                 WHERE 
-                  p.nombre_persona LIKE %s
+                  p.nombre_persona   LIKE %s
                   AND p.apellidos_personas LIKE %s
             """
-            cursor.execute(query, (f"%{nombre_alumno}%", f"%{apellido_alumno}%"))
+
+            params = (
+                f"%{filtro_nombre}%",
+                f"%{filtro_apellidos}%"
+            )
+            cursor.execute(query, params)
             resultados = cursor.fetchall()
 
             if resultados:
-                mensaje = f"Notas de {nombre_alumno} {apellido_alumno}:\n"
+                mensaje = f"📝 Notas de {filtro_nombre} {filtro_apellidos}:\n"
                 for curso, evaluacion, fecha, nota in resultados:
                     mensaje += f"- {curso} ({evaluacion}, {fecha}): {nota}\n"
             else:
-                mensaje = f"⚠️ No se encontraron notas para {nombre_alumno} {apellido_alumno}."
+                mensaje = f"⚠️ No se encontraron notas para {filtro_nombre} {filtro_apellidos}."
 
             cursor.close()
             db.close()
             dispatcher.utter_message(text=mensaje)
 
         except Exception as e:
-            dispatcher.utter_message(text="Ocurrió un error al consultar las notas.")
-            print(f"❌ Error en submit_consultar_notas: {e}")
+            dispatcher.utter_message(text="❌ Ocurrió un error al consultar las notas.")
+            print(f"Error en submit_consultar_notas: {e}")
 
         mostrar_menu_personalizado(dispatcher, tracker)
 
@@ -94,6 +135,7 @@ class SubmitConsultarNotas(Action):
             SlotSet("contexto_actual", "menu_principal"),
             SlotSet("nombre_completo_alumno", None)
         ]
+
 
 
 
@@ -106,13 +148,18 @@ class ConsultarAsistencia(Action):
         if not tracker.get_slot("autenticado"):
             dispatcher.utter_message(text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. Escribe 'Soy apoderado' para comenzar.")
             return []
-        nombre_alumno = tracker.get_slot("nombre_alumno")
-        apellido_alumno = tracker.get_slot("apellido_alumno")
+        nombre_alumno = tracker.get_slot("nombre_alumno") or ""
+        apellido_slot = tracker.get_slot("apellido_alumno") or ""
 
-        if not nombre_alumno or not apellido_alumno:
+        if not nombre_alumno or not apellido_slot:
             dispatcher.utter_message(text="Faltan datos para realizar la consulta.")
             return []
 
+        tokens = apellido_slot.strip().split()
+        if len(tokens) >= 2:
+            filtro_apellidos = f"{tokens[-2]} {tokens[-1]}"
+        else:
+            filtro_apellidos = tokens[0]
         try:
             db = connect_db()
             cursor = db.cursor()
@@ -136,15 +183,19 @@ class ConsultarAsistencia(Action):
                 ORDER BY a.fecha_asistencia DESC
                 LIMIT 5;
             """
-            cursor.execute(query, (f"%{nombre_alumno}%", f"%{apellido_alumno}%"))
+            # justo antes de cursor.execute(query, …)
+            print(f"🔍 Slots -> nombre_alumno: '{nombre_alumno}', apellido_alumno: '{filtro_apellidos}'")
+            print("🔍 Query completa:", query % (f"'%{nombre_alumno}%'", f"'%{filtro_apellidos}%'" ))
+
+            cursor.execute(query, (f"%{nombre_alumno}%", f"%{filtro_apellidos}%"))
             resultados = cursor.fetchall()
 
             if resultados:
-                mensaje = f"📋 Últimas asistencias de {nombre_alumno} {apellido_alumno}:\n"
+                mensaje = f"📋 Últimas asistencias de {nombre_alumno} {filtro_apellidos}:\n"
                 for curso, fecha, estado in resultados:
                     mensaje += f"- {fecha} | {curso}: {estado}\n"
             else:
-                mensaje = f"⚠️ No se encontraron registros recientes de asistencia para {nombre_alumno} {apellido_alumno}."
+                mensaje = f"⚠️ No se encontraron registros recientes de asistencia para {nombre_alumno} {filtro_apellidos}."
 
             cursor.close()
             db.close()
@@ -187,7 +238,7 @@ class ConsultarEventos(Action):
             if resultados:
                 mensaje = "📅 Próximos comunicados importantes:\n\n"
                 for titulo, descripcion, fecha in resultados:
-                    mensaje += f"📝 {titulo} ({fecha}):\n{descripcion}\n\n"
+                    mensaje += f"📝 {titulo}: \n{descripcion}\n\n"
             else:
                 mensaje = "No hay comunicados próximos por el momento."
 
@@ -574,8 +625,41 @@ class ActionConsultarHistorialAsistencia(Action):
         return consultar_asistencias(dispatcher, tracker, tipo="historial")
 
 def consultar_asistencias(dispatcher, tracker, tipo="ultimas"):
-    nombre = tracker.get_slot("nombre_alumno")
-    apellido = tracker.get_slot("apellido_alumno")
+    # 1) Leer y limpiar slots
+    nombre_slot   = (tracker.get_slot("nombre_alumno") or "").strip()
+    apellido_slot = (tracker.get_slot("apellido_alumno") or "").strip()
+
+    # Debug: mostrar valores crudos
+    print(f"🔍 nombre_slot raw:   '{nombre_slot}'")
+    print(f"🔍 apellido_slot raw: '{apellido_slot}'")
+
+    # 2) Si apellido_slot tiene más de 2 tokens, mover el primero al nombre
+    ap_tokens = apellido_slot.split()
+    if len(ap_tokens) > 2:
+        segundo_nombre = ap_tokens.pop(0)
+        nombre_slot = f"{nombre_slot} {segundo_nombre}".strip()
+        apellido_slot = " ".join(ap_tokens)
+
+    # Debug: ver cómo quedó tras el ajuste
+    print(f"🔍 nombre_slot ajustado:   '{nombre_slot}'")
+    print(f"🔍 apellido_slot ajustado: '{apellido_slot}'")
+
+    # 3) Construir filtros PARA CONSULTA
+    #    Nombre: usamos todo lo que haya en nombre_slot
+    filtro_nombre = nombre_slot
+
+    #    Apellidos: últimos dos tokens o el único
+    ap_tokens = apellido_slot.split()
+    if len(ap_tokens) >= 2:
+        filtro_apellidos = f"{ap_tokens[-2]} {ap_tokens[-1]}"
+    elif len(ap_tokens) == 1:
+        filtro_apellidos = ap_tokens[0]
+    else:
+        filtro_apellidos = ""
+
+    # Debug: filtros finales
+    print(f"🔍 filtro_nombre:     '{filtro_nombre}'")
+    print(f"🔍 filtro_apellidos: '{filtro_apellidos}'")
 
     try:
         db = connect_db()
@@ -587,69 +671,80 @@ def consultar_asistencias(dispatcher, tracker, tipo="ultimas"):
                        SUM(a.estado_asistencia = 'Presente'),
                        SUM(a.estado_asistencia = 'Ausente')
                 FROM apoderado ap
-                JOIN persona pa ON ap.id_persona = pa.id_persona
-                JOIN apoderado_alumno aa ON ap.id_apoderado = aa.id_apoderado
-                JOIN alumno al ON aa.id_alumno = al.id_alumno
-                JOIN persona pe ON al.id_persona = pe.id_persona
-                JOIN alumno_curso ac ON al.id_alumno = ac.id_alumno
-                JOIN asistencia a ON ac.id_alumno_curso = a.id_alumno_curso 
-                WHERE pe.nombre_persona LIKE %s
+                JOIN persona pa       ON ap.id_persona       = pa.id_persona
+                JOIN apoderado_alumno aa ON ap.id_apoderado  = aa.id_apoderado
+                JOIN alumno al        ON aa.id_alumno        = al.id_alumno
+                JOIN persona pe       ON al.id_persona       = pe.id_persona
+                JOIN alumno_curso ac  ON al.id_alumno        = ac.id_alumno
+                JOIN asistencia a     ON ac.id_alumno_curso  = a.id_alumno_curso 
+                WHERE pe.nombre_persona   LIKE %s
                   AND pe.apellidos_personas LIKE %s
                 GROUP BY MONTH(a.fecha_asistencia)
             """
+            params = (f"%{filtro_nombre}%", f"%{filtro_apellidos}%")
+
         else:
             query = """
                 SELECT c.nombre_curso, a.fecha_asistencia, a.estado_asistencia
                 FROM apoderado ap
-                JOIN persona pa ON ap.id_persona = pa.id_persona
-                JOIN apoderado_alumno aa ON ap.id_apoderado = aa.id_apoderado
-                JOIN alumno al ON aa.id_alumno = al.id_alumno
-                JOIN persona pe ON al.id_persona = pe.id_persona
-                JOIN alumno_curso ac ON al.id_alumno = ac.id_alumno
-                JOIN curso c ON ac.id_curso = c.id_curso
-                JOIN asistencia a ON ac.id_alumno_curso = a.id_alumno_curso 
-                WHERE pe.nombre_persona LIKE %s
+                JOIN persona pa       ON ap.id_persona       = pa.id_persona
+                JOIN apoderado_alumno aa ON ap.id_apoderado  = aa.id_apoderado
+                JOIN alumno al        ON aa.id_alumno        = al.id_alumno
+                JOIN persona pe       ON al.id_persona       = pe.id_persona
+                JOIN alumno_curso ac  ON al.id_alumno        = ac.id_alumno
+                JOIN curso c          ON ac.id_curso         = c.id_curso
+                JOIN asistencia a     ON ac.id_alumno_curso  = a.id_alumno_curso 
+                WHERE pe.nombre_persona   LIKE %s
                   AND pe.apellidos_personas LIKE %s
             """
-
             if tipo == "ultimas":
-                query += " ORDER BY a.fecha_asistencia DESC LIMIT 5"
+                query += " ORDER BY a.fecha_asistencia DESC LIMIT 15"
             elif tipo == "faltas":
                 query += " AND a.estado_asistencia = 'Ausente'"
+            elif tipo == "historial":
+                query += " ORDER BY a.fecha_asistencia DESC"
+            params = (f"%{filtro_nombre}%", f"%{filtro_apellidos}%")
 
-        cursor.execute(query, (f"%{nombre}%", f"%{apellido}%"))
+        # Debug: consulta y parámetros
+        print("🔍 Query:", query)
+        print("🔍 Params:", params)
+
+        cursor.execute(query, params)
         resultados = cursor.fetchall()
+        cursor.close()
+        db.close()
 
         if not resultados:
-            dispatcher.utter_message(text="No se encontraron registros de asistencia.")
+            dispatcher.utter_message(text="⚠️ No se encontraron registros de asistencia.")
             return [SlotSet("contexto_actual", "menu_principal")]
 
         if tipo == "resumen":
-            mensaje = f"Resumen mensual de asistencia de {nombre} {apellido}:\n"
-            for mes, total, presentes, ausentes in resultados:
-                mensaje += f"- Mes {mes}: {total} clases | {presentes} presentes | {ausentes} ausentes\n"
+            mensaje = f"📊 Resumen mensual de asistencia de {filtro_nombre} {filtro_apellidos}:\n"
+            for mes, total, pres, aus in resultados:
+                mensaje += f"- Mes {mes}: {total} clases | {pres} presentes | {aus} ausentes\n"
         else:
-            mensaje = f"Asistencias de {nombre} {apellido}:\n"
+            mensaje = f"🗓️ Asistencias de {filtro_nombre} {filtro_apellidos}:\n"
             for curso, fecha, estado in resultados:
                 mensaje += f"- {fecha} | {curso}: {estado}\n"
 
         dispatcher.utter_message(text=mensaje)
         dispatcher.utter_message(text="""
-        📌 ¿Deseas consultar otro tipo de asistencia?
-            Puedes escribirme:
-            ✔️  Últimas asistencias
-            ✔️  Solo faltas
-            ✔️  Resumen mensual
-            ✔️  Historial completo
-            O escribe 'menú' para volver al menú principal.
-            """)
-
+📌 ¿Deseas consultar otro tipo de asistencia?
+✔️ Últimas asistencias
+✔️ Solo faltas
+✔️ Resumen mensual
+✔️ Historial completo
+Escribe 'menú' para volver al menú principal.
+        """)
         return [SlotSet("contexto_actual", "asistencia")]
 
     except Exception as e:
-        dispatcher.utter_message(text="Ocurrió un error al consultar la asistencia.")
-        print(f"❌ Error en asistencia ({tipo}): {e}")
+        print(f"❌ Error en consultar_asistencias: {e}")
+        dispatcher.utter_message(text="❌ Ocurrió un error al consultar las asistencias.")
         return [SlotSet("contexto_actual", "menu_principal")]
+
+
+
 
 class ActionPedirOpcionesAsistencia(Action):
     def name(self) -> str:
@@ -671,11 +766,52 @@ class ActionConsultarObservaciones(Action):
         return "action_consultar_observaciones"
 
     def run(self, dispatcher, tracker, domain):
+        # 1) Validar autenticación
         if not tracker.get_slot("autenticado"):
-            dispatcher.utter_message(text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. Escribe 'Soy apoderado' para comenzar.")
+            dispatcher.utter_message(
+                text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. "
+                     "Escribe 'Soy apoderado' para comenzar."
+            )
             return []
-        nombre_alumno = tracker.get_slot("nombre_alumno")
-        apellido_alumno = tracker.get_slot("apellido_alumno")
+
+        # 2) Leer y limpiar slots
+        nombre_slot   = (tracker.get_slot("nombre_alumno") or "").strip()
+        apellido_slot = (tracker.get_slot("apellido_alumno") or "").strip()
+
+        # Debug: mostrar valores crudos de los slots
+        print(f"🔍 nombre_slot raw:   '{nombre_slot}'")
+        print(f"🔍 apellido_slot raw: '{apellido_slot}'")
+
+        # 3) Si apellido_slot tiene >2 tokens, mover el primero a nombre_slot
+        ap_tokens = apellido_slot.split()
+        if len(ap_tokens) > 2:
+            segundo_nombre = ap_tokens.pop(0)
+            nombre_slot = f"{nombre_slot} {segundo_nombre}".strip()
+            apellido_slot = " ".join(ap_tokens)
+
+        # Debug: tras ajustar
+        print(f"🔍 nombre_slot ajustado:   '{nombre_slot}'")
+        print(f"🔍 apellido_slot ajustado: '{apellido_slot}'")
+
+        # 4) Construir filtro de nombre: primeros dos tokens o el único
+        nombre_tokens = nombre_slot.split()
+        if len(nombre_tokens) >= 2:
+            filtro_nombre = f"{nombre_tokens[0]} {nombre_tokens[1]}"
+        elif len(nombre_tokens) == 1:
+            filtro_nombre = nombre_tokens[0]
+        else:
+            filtro_nombre = ""
+        print(f"🔍 filtro_nombre: '{filtro_nombre}'")
+
+        # 5) Construir filtro de apellidos: últimos dos tokens o el único
+        ap_tokens = apellido_slot.split()
+        if len(ap_tokens) >= 2:
+            filtro_apellidos = f"{ap_tokens[-2]} {ap_tokens[-1]}"
+        elif len(ap_tokens) == 1:
+            filtro_apellidos = ap_tokens[0]
+        else:
+            filtro_apellidos = ""
+        print(f"🔍 filtro_apellidos: '{filtro_apellidos}'")
 
         try:
             db = connect_db()
@@ -688,40 +824,56 @@ class ActionConsultarObservaciones(Action):
                     o.fecha_observacion,
                     o.observacion
                 FROM observacion o
-                JOIN docente_curso dc ON o.id_docente_curso = dc.id_docente_curso
-                JOIN curso c ON dc.id_curso = c.id_curso
-                JOIN docente d ON dc.id_docente = d.id_docente
-                JOIN persona dp ON d.id_persona = dp.id_persona
-                JOIN alumno a ON o.id_alumno = a.id_alumno
-                JOIN persona p ON a.id_persona = p.id_persona
-                JOIN alumno_grado ag ON a.id_alumno = ag.id_alumno AND dc.id_grado = ag.id_grado AND dc.id_periodo = ag.id_periodo
-                JOIN periodo pe ON ag.id_periodo = pe.id_periodo
-                WHERE p.nombre_persona LIKE %s
-                AND p.apellidos_personas LIKE %s
-                AND pe.estado_periodo = 1;
+                JOIN docente_curso dc 
+                  ON o.id_docente_curso = dc.id_docente_curso
+                JOIN curso c 
+                  ON dc.id_curso = c.id_curso
+                JOIN docente d 
+                  ON dc.id_docente = d.id_docente
+                JOIN persona dp 
+                  ON d.id_persona = dp.id_persona
+                JOIN alumno a 
+                  ON o.id_alumno = a.id_alumno
+                JOIN persona p 
+                  ON a.id_persona = p.id_persona
+                JOIN alumno_grado ag 
+                  ON a.id_alumno = ag.id_alumno 
+                 AND dc.id_grado = ag.id_grado 
+                 AND dc.id_periodo = ag.id_periodo
+                JOIN periodo pe 
+                  ON ag.id_periodo = pe.id_periodo
+                WHERE p.nombre_persona     LIKE %s
+                  AND p.apellidos_personas LIKE %s
+                  AND pe.estado_periodo = 1;
             """
+            params = (f"%{filtro_nombre}%", f"%{filtro_apellidos}%")
 
-            cursor.execute(query, (f"%{nombre_alumno}%", f"%{apellido_alumno}%"))
+            # Debug: mostrar query y parámetros
+            print("🔍 Query a ejecutar:", query)
+            print("🔍 Parámetros:", params)
+
+            cursor.execute(query, params)
             resultados = cursor.fetchall()
-
-            if resultados:
-                mensaje = f"📌 Observaciones de {nombre_alumno} {apellido_alumno}:\n\n"
-                for curso, docente, fecha, obs in resultados:
-                    mensaje += f"- {curso} ({fecha}) - Docente {docente}:\n  {obs}\n\n"
-            else:
-                mensaje = f"No se encontraron observaciones para {nombre_alumno} {apellido_alumno}."
 
             cursor.close()
             db.close()
+
+            if resultados:
+                mensaje = f"📌 Observaciones de {filtro_nombre} {filtro_apellidos}:\n\n"
+                for curso, docente, fecha, obs in resultados:
+                    mensaje += f"- {curso} ({fecha}) - Docente {docente}:\n  {obs}\n\n"
+            else:
+                mensaje = f"⚠️ No se encontraron observaciones para {filtro_nombre} {filtro_apellidos}."
+
             dispatcher.utter_message(text=mensaje)
 
         except Exception as e:
-            dispatcher.utter_message(text="Ocurrió un error al consultar las observaciones.")
             print(f"❌ Error en action_consultar_observaciones: {e}")
+            dispatcher.utter_message(text="❌ Ocurrió un error al consultar las observaciones.")
 
         mostrar_menu_personalizado(dispatcher, tracker)
-
         return [SlotSet("contexto_actual", "menu_principal")]
+
 
 
 class ActionConsultarHorarioClases(Action):
@@ -729,11 +881,52 @@ class ActionConsultarHorarioClases(Action):
         return "action_consultar_horario"
 
     def run(self, dispatcher, tracker, domain):
+        # 1) Validar autenticación
         if not tracker.get_slot("autenticado"):
-            dispatcher.utter_message(text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. Escribe 'Soy apoderado' para comenzar.")
+            dispatcher.utter_message(
+                text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. "
+                     "Escribe 'Soy apoderado' para comenzar."
+            )
             return []
-        nombre = tracker.get_slot("nombre_alumno")
-        apellido = tracker.get_slot("apellido_alumno")
+
+        # 2) Leer y limpiar slots
+        nombre_slot   = (tracker.get_slot("nombre_alumno") or "").strip()
+        apellido_slot = (tracker.get_slot("apellido_alumno") or "").strip()
+
+        # Debug: ver valores crudos
+        print(f"🔍 nombre_slot raw:   '{nombre_slot}'")
+        print(f"🔍 apellido_slot raw: '{apellido_slot}'")
+
+        # 3) Ajustar si apellido_slot tiene >2 tokens
+        ap_tokens = apellido_slot.split()
+        if len(ap_tokens) > 2:
+            segundo_nombre = ap_tokens.pop(0)
+            nombre_slot = f"{nombre_slot} {segundo_nombre}".strip()
+            apellido_slot = " ".join(ap_tokens)
+
+        # Debug: tras ajuste
+        print(f"🔍 nombre_slot ajustado:   '{nombre_slot}'")
+        print(f"🔍 apellido_slot ajustado: '{apellido_slot}'")
+
+        # 4) Construir filtro de nombre: primeros dos tokens o el único
+        nombre_tokens = nombre_slot.split()
+        if len(nombre_tokens) >= 2:
+            filtro_nombre = f"{nombre_tokens[0]} {nombre_tokens[1]}"
+        elif len(nombre_tokens) == 1:
+            filtro_nombre = nombre_tokens[0]
+        else:
+            filtro_nombre = ""
+        print(f"🔍 filtro_nombre: '{filtro_nombre}'")
+
+        # 5) Construir filtro de apellidos: últimos dos tokens o el único
+        ap_tokens = apellido_slot.split()
+        if len(ap_tokens) >= 2:
+            filtro_apellidos = f"{ap_tokens[-2]} {ap_tokens[-1]}"
+        elif len(ap_tokens) == 1:
+            filtro_apellidos = ap_tokens[0]
+        else:
+            filtro_apellidos = ""
+        print(f"🔍 filtro_apellidos: '{filtro_apellidos}'")
 
         try:
             db = connect_db()
@@ -752,31 +945,37 @@ class ActionConsultarHorarioClases(Action):
                 JOIN docente_curso dc ON h.id_docente_curso = dc.id_docente_curso
                 JOIN curso c ON dc.id_curso = c.id_curso
                 JOIN periodo pe ON ag.id_periodo = pe.id_periodo
-                WHERE p.nombre_persona LIKE %s
+                WHERE p.nombre_persona   LIKE %s
                   AND p.apellidos_personas LIKE %s
                   AND pe.estado_periodo = 1
-                ORDER BY FIELD(h.dia, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'), h.hora_inicio;
+                ORDER BY FIELD(h.dia, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'),
+                         h.hora_inicio;
             """
-            cursor.execute(query, (f"%{nombre}%", f"%{apellido}%"))
+
+            params = (f"%{filtro_nombre}%", f"%{filtro_apellidos}%")
+            # Debug: mostrar consulta y parámetros
+            print("🔍 Query a ejecutar:", query)
+            print("🔍 Parámetros:", params)
+
+            cursor.execute(query, params)
             resultados = cursor.fetchall()
+            cursor.close()
+            db.close()
 
             if resultados:
-                mensaje = f"🗓️ Horario de clases de {nombre} {apellido}:\n"
+                mensaje = f"🗓️ Horario de clases de {filtro_nombre} {filtro_apellidos}:\n"
                 for curso, dia, inicio, fin in resultados:
                     mensaje += f"- {dia}: {curso} de {inicio} a {fin}\n"
             else:
-                mensaje = f"No se encontró un horario registrado para {nombre} {apellido}."
+                mensaje = f"⚠️ No se encontró un horario registrado para {filtro_nombre} {filtro_apellidos}."
 
-            cursor.close()
-            db.close()
             dispatcher.utter_message(text=mensaje)
 
         except Exception as e:
-            dispatcher.utter_message(text="Ocurrió un error al consultar el horario.")
-            print(f"❌ Error en action_consultar_horario: {e}")
+            dispatcher.utter_message(text="❌ Ocurrió un error al consultar el horario.")
+            print(f"Error en action_consultar_horario: {e}")
 
         mostrar_menu_personalizado(dispatcher, tracker)
-
         return [SlotSet("contexto_actual", "menu_principal")]
 
 
@@ -786,11 +985,52 @@ class ActionConsultarDocente(Action):
         return "action_consultar_docente"
 
     def run(self, dispatcher, tracker, domain):
+        # 1) Validar autenticación
         if not tracker.get_slot("autenticado"):
-            dispatcher.utter_message(text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. Escribe 'Soy apoderado' para comenzar.")
+            dispatcher.utter_message(
+                text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. "
+                     "Escribe 'Soy apoderado' para comenzar."
+            )
             return []
-        nombre = tracker.get_slot("nombre_alumno")
-        apellido = tracker.get_slot("apellido_alumno")
+
+        # 2) Leer y limpiar slots
+        nombre_slot   = (tracker.get_slot("nombre_alumno") or "").strip()
+        apellido_slot = (tracker.get_slot("apellido_alumno") or "").strip()
+
+        # Debug: valores crudos
+        print(f"🔍 nombre_slot raw:   '{nombre_slot}'")
+        print(f"🔍 apellido_slot raw: '{apellido_slot}'")
+
+        # 3) Si apellido_slot tiene >2 tokens, mover el primero a nombre_slot
+        ap_tokens = apellido_slot.split()
+        if len(ap_tokens) > 2:
+            segundo_nombre = ap_tokens.pop(0)
+            nombre_slot = f"{nombre_slot} {segundo_nombre}".strip()
+            apellido_slot = " ".join(ap_tokens)
+
+        # Debug: tras ajuste
+        print(f"🔍 nombre_slot ajustado:   '{nombre_slot}'")
+        print(f"🔍 apellido_slot ajustado: '{apellido_slot}'")
+
+        # 4) Construir filtro de nombre: primeros dos tokens o el único
+        nombre_tokens = nombre_slot.split()
+        if len(nombre_tokens) >= 2:
+            filtro_nombre = f"{nombre_tokens[0]} {nombre_tokens[1]}"
+        elif len(nombre_tokens) == 1:
+            filtro_nombre = nombre_tokens[0]
+        else:
+            filtro_nombre = ""
+        print(f"🔍 filtro_nombre: '{filtro_nombre}'")
+
+        # 5) Construir filtro de apellidos: últimos dos tokens o el único
+        ap_tokens = apellido_slot.split()
+        if len(ap_tokens) >= 2:
+            filtro_apellidos = f"{ap_tokens[-2]} {ap_tokens[-1]}"
+        elif len(ap_tokens) == 1:
+            filtro_apellidos = ap_tokens[0]
+        else:
+            filtro_apellidos = ""
+        print(f"🔍 filtro_apellidos: '{filtro_apellidos}'")
 
         try:
             db = connect_db()
@@ -807,37 +1047,53 @@ class ActionConsultarDocente(Action):
                 JOIN persona pa ON a.id_persona = pa.id_persona
                 JOIN alumno_curso ac ON a.id_alumno = ac.id_alumno
                 JOIN curso c ON ac.id_curso = c.id_curso
-                JOIN docente_curso dc ON c.id_curso = dc.id_curso AND ac.id_periodo = dc.id_periodo AND a.id_alumno IN (
-                    SELECT id_alumno FROM alumno_grado ag WHERE ag.id_periodo = ac.id_periodo
-                )
+                JOIN docente_curso dc 
+                  ON c.id_curso = dc.id_curso 
+                 AND ac.id_periodo = dc.id_periodo 
+                 AND a.id_alumno IN (
+                     SELECT id_alumno 
+                       FROM alumno_grado ag 
+                      WHERE ag.id_periodo = ac.id_periodo
+                  )
                 JOIN docente d ON dc.id_docente = d.id_docente
                 JOIN persona pd ON d.id_persona = pd.id_persona
                 JOIN periodo pe ON ac.id_periodo = pe.id_periodo
-                WHERE pa.nombre_persona LIKE %s
+                WHERE pa.nombre_persona     LIKE %s
                   AND pa.apellidos_personas LIKE %s
                   AND pe.estado_periodo = 1;
             """
-            cursor.execute(query, (f"%{nombre}%", f"%{apellido}%"))
+            params = (f"%{filtro_nombre}%", f"%{filtro_apellidos}%")
+
+            # Debug: consulta y parámetros
+            print("🔍 Query a ejecutar:", query)
+            print("🔍 Parámetros:", params)
+
+            cursor.execute(query, params)
             resultados = cursor.fetchall()
-
-            if resultados:
-                mensaje = f"👨‍🏫 Docentes de {nombre} {apellido} en sus cursos actuales:\n"
-                for curso, nombre_docente, apellido_docente, correo, telefono in resultados:
-                    mensaje += f"\n📚 *{curso}*\n- Docente: {nombre_docente} {apellido_docente}\n- Correo: {correo}\n- Teléfono: {telefono}\n"
-            else:
-                mensaje = f"No se encontró información de docentes para {nombre} {apellido}."
-
             cursor.close()
             db.close()
+
+            if resultados:
+                mensaje = f"👨‍🏫 Docentes de {filtro_nombre} {filtro_apellidos} en sus cursos actuales:\n"
+                for curso, nom_doc, ape_doc, correo, telefono in resultados:
+                    mensaje += (
+                        f"\n📚 *{curso}*\n"
+                        f"- Docente: {nom_doc} {ape_doc}\n"
+                        f"- Correo: {correo}\n"
+                        f"- Teléfono: {telefono}\n"
+                    )
+            else:
+                mensaje = f"⚠️ No se encontró información de docentes para {filtro_nombre} {filtro_apellidos}."
+
             dispatcher.utter_message(text=mensaje)
 
         except Exception as e:
-            dispatcher.utter_message(text="Ocurrió un error al consultar la información de los docentes.")
-            print(f"❌ Error en action_consultar_docentes: {e}")
+            dispatcher.utter_message(text="❌ Ocurrió un error al consultar la información de los docentes.")
+            print(f"Error en action_consultar_docente: {e}")
 
         mostrar_menu_personalizado(dispatcher, tracker)
-
         return [SlotSet("contexto_actual", "menu_principal")]
+
 
 
 
@@ -850,7 +1106,13 @@ class ActionConsultarEstadoMatricula(Action):
             dispatcher.utter_message(text="⚠️ Debes iniciar sesión como apoderado para acceder a esta información. Escribe 'Soy apoderado' para comenzar.")
             return []
         nombre = tracker.get_slot("nombre_alumno")
-        apellido = tracker.get_slot("apellido_alumno")
+        apellido_slot  = tracker.get_slot("apellido_alumno")
+
+        tokens = apellido_slot.strip().split()
+        if len(tokens) >= 2:
+            filtro_apellidos = f"{tokens[-2]} {tokens[-1]}"
+        else:
+            filtro_apellidos = tokens[0]
 
         try:
             db = connect_db()
@@ -871,14 +1133,14 @@ class ActionConsultarEstadoMatricula(Action):
                   AND p.estado_periodo = 1
                 LIMIT 1;
             """
-            cursor.execute(query, (f"%{nombre}%", f"%{apellido}%"))
+            cursor.execute(query, (f"%{nombre}%", f"%{filtro_apellidos}%"))
             resultado = cursor.fetchone()
 
             if resultado:
                 grado, seccion, periodo = resultado
-                mensaje = f"🎓 {nombre} {apellido} está actualmente matriculado en:\n📘 *{grado}* - Sección *{seccion}* ({periodo})"
+                mensaje = f"🎓 {nombre} {filtro_apellidos} está actualmente matriculado en:\n📘 *{grado}* - Sección *{seccion}* ({periodo})"
             else:
-                mensaje = f"No se encontró información del grado actual para {nombre} {apellido}."
+                mensaje = f"No se encontró información del grado actual para {nombre} {filtro_apellidos}."
 
             cursor.close()
             db.close()
@@ -934,13 +1196,19 @@ class ActionCerrarSesion(Action):
             SlotSet("dni_apoderado", None),
             SlotSet("nombre_alumno", None),
             SlotSet("apellido_alumno", None),
+            SlotSet("clave_acceso", None),           # <-- aquí
+            SlotSet("requested_slot", None), 
             SlotSet("autenticado", None),
             SlotSet("alumnos_disponibles", None),
             SlotSet("alumno_seleccionado", None),
             SlotSet("contexto_actual", None),
             SlotSet("nombre_completo_alumno", None),
-            SlotSet("filtro_asistencia", None)
+            SlotSet("filtro_asistencia", None),
+
+            ActiveLoop(None)
+
         ]
+    
 
 class ActionDefaultFallback(Action):
     def name(self) -> str:
