@@ -4,8 +4,9 @@ services:
     env: docker
     plan: free
     dockerfilePath: Dockerfile
-    internalPort: 10000        # el puerto interno de tu contenedor
+    internalPort: 10000
     startCommand: >
-      sh -lc "rasa run --enable-api --cors '*' --debug \
-              --interface 0.0.0.0 --port $PORT"
+      rasa run --enable-api --cors "*" --debug
+        --interface 0.0.0.0
+        --port $PORT
     healthCheckPath: /status

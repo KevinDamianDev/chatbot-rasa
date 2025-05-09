@@ -1,35 +1,19 @@
-# Imagen base con Python 3.10
-FROM python:3.10-slim
+# syntax=docker/dockerfile:1
+FROM rasa/rasa:3.5.10-full AS base
 
-# Evita los prompts interactivos
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Instala dependencias necesarias
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    curl \
-    git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Establece directorio de trabajo
 WORKDIR /app
 
-# Copia los archivos del proyecto al contenedor
-COPY . /app
+# Copiamos sólo lo imprescindible
+COPY config.yml        .
+COPY credentials.yml   .
+COPY domain.yml        .
+COPY endpoints.yml     .
+COPY data/             ./data
+COPY actions/          ./actions
+COPY models/           ./models
 
-# Instala pip actualizado
-RUN pip install --upgrade pip
-
-# Instala las dependencias del proyecto
-RUN pip install -r requirements.txt
-
-# Expone el puerto que Render asigna dinámicamente
+# Exponemos el puerto que Render usará
 EXPOSE 10000
 
-
-#CMD ["sh", "-c", "echo Assigned PORT is $PORT && rasa run --enable-api --cors '*' --debug --port $PORT"]
-
-#CMD PORT=${PORT:-5005} && echo "🔌 Listening on port $PORT" && exec rasa run --enable-api --cors '*' --debug --interface 0.0.0.0 --port $PORT
-CMD ["sh","-lc","rasa run --enable-api --cors '*' --debug --interface 0.0.0.0 --port $PORT"]
+# Arrancamos Rasa escuchando en $PORT (10000 por defecto en Render)
+CMD ["rasa","run","--enable-api","--cors","*","--debug","--interface","0.0.0.0","--port","$PORT"]
