@@ -1,0 +1,9 @@
+# No copies tus entornos locales ni cachés
+venv/
+venv38/
+__pycache__/
+.rasa/
+models/2025*           # opcional: si tus modelos de entrenamiento pesan mucho, muévelos fuera
+*.tar.gz
+tests/
+.git/

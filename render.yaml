@@ -11,3 +11,5 @@ services:
         value: production
       - key: SANIC_HOST
         value: "0.0.0.0"
+      - key: SANIC_PORT
+        value: "10000"
