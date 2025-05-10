@@ -4,7 +4,7 @@ USER root
 WORKDIR /app
 
 # Copia tus archivos de Rasa
-COPY config.yml credentials.yml domain.yml endpoints.yml ./ 
+COPY config.yml credentials.yml domain.yml endpoints.yml ./
 COPY data/           ./data
 COPY actions/        ./actions
 COPY models/         ./models
@@ -13,8 +13,8 @@ COPY models/         ./models
 COPY start.sh        /app/start.sh
 RUN chmod +x /app/start.sh
 
-# Exponemos el puerto que usará Render (internalPort: 10000)
+# Exponemos el puerto que usará Render
 EXPOSE 10000
 
-# Arrancamos Rasa directamente
-ENTRYPOINT ["bash","/app/start.sh"]
+# Arrancamos start.sh (que lanza el stub y luego Rasa)
+ENTRYPOINT ["bash", "/app/start.sh"]
