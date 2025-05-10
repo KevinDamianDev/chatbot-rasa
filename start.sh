@@ -3,11 +3,13 @@ set -e
 
 echo "🔌 Assigned PORT is: ${PORT}"
 
-# 1) Arranco nginx (que ya abrirá el puerto 10000 al instante)
-nginx -c /app/nginx.conf
+# 1) Arranco nginx en background (usa tu nginx.conf)
+nginx -c /app/nginx.conf &
 
-# 2) Ahora lanzo Rasa en background o en primer plano escuchando en 5005
-#    Rasa no bloquea el puerto 10000, sino el 5005.
+# 2) Espero un par de segundos para que Nginx abra el puerto
+sleep 2
+
+# 3) Ahora lanzo Rasa en primer plano en el puerto interno (5005)
 rasa run \
   --enable-api \
   --cors "*" \
