@@ -5,9 +5,11 @@ services:
     plan: free
     dockerfilePath: Dockerfile
     internalPort: 10000
-    healthCheckPath: /webhooks/rest/webhook  # Ruta que siempre existe
+    healthCheckPath: /webhooks/rest/webhook
     envVars:
       - key: RASA_ENVIRONMENT
         value: production
       - key: SANIC_HOST
         value: "0.0.0.0"
+      - key: SANIC_WORKERS
+        value: "1"
