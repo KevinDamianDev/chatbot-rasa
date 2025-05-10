@@ -1,14 +1,17 @@
 FROM rasa/rasa:3.5.10-full
 
-# Trabajamos como root para copiar y exponer el puerto
 USER root
 WORKDIR /app
 
-# Copia todo el proyecto (config, models, actions, etc)
-COPY . .
+COPY config.yml credentials.yml domain.yml endpoints.yml ./
+COPY data/           ./data
+COPY actions/        ./actions
+COPY models/         ./models
 
-# Exponemos el puerto por defecto de Rasa (5005)
-EXPOSE 5005
+# Copiamos el start.sh corregido
+COPY start.sh        /app/start.sh
+RUN chmod +x /app/start.sh
 
-# Arrancamos Rasa directamente, usando la variable de entorno PORT que Render asigna
-ENTRYPOINT ["bash", "-c", "rasa run --enable-api --cors '*' --interface 0.0.0.0 --port $PORT"]
+EXPOSE 10000
+
+ENTRYPOINT ["bash", "/app/start.sh"]

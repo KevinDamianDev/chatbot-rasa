@@ -4,5 +4,5 @@ services:
     env: docker
     plan: free
     dockerfilePath: Dockerfile
-    internalPort: 5005      # <-- OJO: aquí 5005, que es donde escuchará Rasa
+    internalPort: 10000
     healthCheckPath: /status
