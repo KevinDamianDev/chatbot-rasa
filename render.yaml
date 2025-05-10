@@ -5,4 +5,7 @@ services:
     plan: free
     dockerfilePath: Dockerfile
     internalPort: 10000
-    healthCheckPath: /status
+    healthCheckPath: /  # Cambiado de /status a /
+    envVars:
+      - key: RASA_ENVIRONMENT
+        value: production
