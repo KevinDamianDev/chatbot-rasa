@@ -4,6 +4,5 @@ services:
     env: docker
     plan: free
     dockerfilePath: Dockerfile
-    internalPort: 10000       # el puerto interno donde Rasa va a escuchar
-    startCommand: ./start.sh  # orden para arrancar tu contenedor
-    healthCheckPath: /status  # endpoint para validar que el servicio esté arriba
+    internalPort: 10000
+    healthCheckPath: /status   # opcional, para que Render haga GET /status

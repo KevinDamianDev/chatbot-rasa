@@ -1,24 +1,26 @@
 FROM rasa/rasa:3.5.10-full
 
-# 1) súbete a root para cambiar permisos
 USER root
-
 WORKDIR /app
 
-COPY config.yml       .
-COPY credentials.yml  .
-COPY domain.yml       .
-COPY endpoints.yml    .
-COPY data/            ./data
-COPY actions/         ./actions
-COPY models/          ./models
+# Copia tus archivos de Rasa
+COPY config.yml credentials.yml domain.yml endpoints.yml ./ 
+COPY data/           ./data
+COPY actions/        ./actions
+COPY models/         ./models
 
-COPY start.sh         .
-RUN chmod +x start.sh
+# Copia la configuración de nginx y tu script de arranque
+COPY nginx.conf      /app/nginx.conf
+COPY start.sh        /app/start.sh
+RUN chmod +x /app/start.sh
 
+# Instala nginx
+RUN apt-get update && \
+    apt-get install -y nginx && \
+    rm -rf /var/lib/apt/lists/*
+
+# Exponemos el puerto que usará Render (internalPort: 10000)
 EXPOSE 10000
 
-# 2) (opcional) puedes seguir como root o volver al usuario por defecto
-# USER 1001
-
-ENTRYPOINT ["bash", "./start.sh"]
+# Arrancamos nginx + Rasa
+ENTRYPOINT ["bash","/app/start.sh"]
