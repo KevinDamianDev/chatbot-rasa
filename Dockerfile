@@ -1,18 +1,15 @@
-# Dockerfile
 FROM rasa/rasa:3.5.10-full
 
-# Trabajamos como root
-USER root
 WORKDIR /app
 
-# Copia configuración y tu bot
+# Copiamos configs y código
 COPY config.yml credentials.yml domain.yml endpoints.yml ./
-COPY data/           ./data
-COPY actions/        ./actions
-COPY models/         ./models
+COPY data/ data/
+COPY actions/ actions/
+COPY models/ models/
 
-# Exponemos el puerto que Render usará (10000)
+# Exponemos el puerto que Render use internamente
 EXPOSE 10000
 
-# Arrancamos Rasa directamente en el PORT que Render inyecta
-ENTRYPOINT ["bash","-c","rasa run --enable-api --cors '*' --interface 0.0.0.0 --port ${PORT:-5005}"]
+# Arrancamos Rasa con el flag correcto --host, leyendo PORT
+CMD ["bash", "-c", "rasa run --enable-api --cors '*' --host 0.0.0.0 --port ${PORT}"]
