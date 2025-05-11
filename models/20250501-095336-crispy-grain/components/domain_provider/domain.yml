@@ -1,0 +1,204 @@
+version: '3.1'
+intents:
+- affirm
+- autenticar_apoderado
+- ayuda
+- cambiar_alumno
+- cerrar_sesion
+- consultar_asistencia
+- consultar_docente
+- consultar_estado_matricula
+- consultar_eventos
+- consultar_horario
+- consultar_notas
+- consultar_observaciones
+- deny
+- goodbye
+- greet
+- quien_eres
+- seleccionar_alumno
+- seleccionar_numero
+- soy_alumno
+- ver_faltas
+- ver_historial_asistencia
+- ver_resumen_mensual
+- ver_ultimas_asistencias
+- volver_menu
+slots:
+  nombre_apoderado:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_text
+      conditions:
+      - active_loop: form_autenticacion
+        requested_slot: nombre_apoderado
+  apellido_apoderado:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_text
+      conditions:
+      - active_loop: form_autenticacion
+        requested_slot: apellido_apoderado
+  dni_apoderado:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_text
+      conditions:
+      - active_loop: form_autenticacion
+        requested_slot: dni_apoderado
+  clave_acceso:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_text
+      conditions:
+      - active_loop: form_autenticacion
+        requested_slot: clave_acceso
+  alumnos_disponibles:
+    type: list
+    influence_conversation: false
+    mappings:
+    - type: custom
+  alumno_seleccionado:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  filtro_asistencia:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  contexto_actual:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  contexto_numero:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  autenticado:
+    type: bool
+    influence_conversation: false
+    mappings:
+    - type: custom
+  nombre_completo_alumno:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  nombre_alumno:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  apellido_alumno:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+responses:
+  utter_greet:
+  - text: |
+      👋 ¡Hola!
+      🤖 Soy el asistente virtual de la institución educativa "Vicús" 🏫
+      📚 Estoy aquí para ayudarte a consultar la información académica de tu hijo(a), como sus notas, asistencias, horario, observaciones y más.
+      📢 Si eres apoderado, por favor escribe: "Soy apoderado" para comenzar.
+  utter_quien_eres:
+  - text: |
+      👋 ¡Hola!
+      🤖 Soy el asistente virtual de la institución educativa "Vicús" 🏫
+      📚 Estoy aquí para ayudarte a consultar la información académica de tu hijo(a), como sus notas, asistencias, horario, observaciones y más.
+      📢 Si eres apoderado, por favor escribe: "Soy apoderado" para comenzar.
+  utter_goodbye:
+  - text: ¡Adiós! Si necesitas más información, estaré aquí.
+  utter_ask_nombre_apoderado:
+  - text: 🔐 ¿Cuál es tu nombre?
+  utter_ask_apellido_apoderado:
+  - text: 🔐 ¿Cuál es tu apellido?
+  utter_ask_dni_apoderado:
+  - text: 🔐 ¿Cuál es tu DNI?
+  utter_confirm_autenticacion:
+  - text: ✅ ¡Perfecto! Ya te tengo registrado. Puedes hacerme consultas sobre notas, asistencias, eventos y más.
+  utter_pedir_seleccion_alumno:
+  - text: |
+      Tienes varios estudiantes asociados. 
+      {alumnos}
+      Por favor, elige al estudiante escribiendo su número. Ejemplo: 'elijo el 1'.
+  utter_numero_fuera_de_rango:
+  - text: Ese número no está en la lista. Intenta con uno válido.
+  utter_eleccion_invalida:
+  - text: ⚠️ No entendí tu elección. Por favor, selecciona usando un número como 'elijo el 1'.
+  utter_opciones_asistencia:
+  - text: |
+      ¿Qué tipo de asistencia deseas consultar?
+      Puedes escribirme por ejemplo:
+      - Últimas asistencias
+      - Solo faltas
+      - Resumen mensual
+      - Historial completo
+      - Volver al menú principal
+  utter_no_soy_apoderado:
+  - text: ⚠️ Este asistente es exclusivo para apoderados. Por favor, escribe 'Soy apoderado' para continuar.
+  utter_no_observaciones:
+  - text: ⚠️ No se encontraron observaciones registradas por los docentes.
+  utter_no_horario:
+  - text: ⚠️ No se encontró un horario asignado para el estudiante.
+  utter_no_docente:
+  - text: ⚠️ No se encontró información del docente.
+  utter_no_estado_matricula:
+  - text: ⚠️ No se encontró el estado de matrícula o grado actual del estudiante.
+  utter_default:
+  - text: ⚠️ No entendí tu mensaje. Soy un asistente para consultas académicas como notas, asistencias, eventos y más. Escribe 'Soy apoderado' para comenzar.
+  utter_ayuda:
+  - text: |
+      🆘 Puedo ayudarte con lo siguiente:
+      - Consultar notas
+      - Ver asistencias
+      - Ver eventos o comunicados
+      - Consultar horario de clases
+      - Ver observaciones del docente
+      - Consultar información del docente
+      - Ver grado actual
+      Escribe "Soy apoderado" para empezar o escribe lo que deseas hacer directamente.
+  utter_ask_clave_acceso:
+  - text: '🔐 Ingresa tu clave de acceso:'
+actions:
+- submit_consultar_notas
+- action_consultar_asistencia
+- action_consultar_eventos
+- validate_consultar_notas_form
+- action_guardar_datos_apoderado
+- validate_form_autenticacion
+- action_mostrar_alumnos
+- action_seleccionar_alumno
+- action_cambiar_alumno
+- action_mostrar_menu
+- action_consultar_ultimas_asistencias
+- action_consultar_solo_faltas
+- action_consultar_resumen_asistencia
+- action_consultar_historial_asistencia
+- action_seleccionar_numero
+- action_pedir_opciones_asistencia
+- action_activar_filtro_asistencia
+- action_consultar_observaciones
+- action_consultar_horario
+- action_consultar_docente
+- action_consultar_estado_matricula
+- action_cerrar_sesion
+- action_default_fallback
+forms:
+  form_autenticacion:
+    required_slots:
+    - nombre_apoderado
+    - apellido_apoderado
+    - dni_apoderado
+    - clave_acceso
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true
