@@ -1,43 +1,58 @@
+# ─────────────────────────────────────────────────────────────
+# 1. Base image
+# ─────────────────────────────────────────────────────────────
 FROM rasa/rasa:3.5.10-full
+
+# ─────────────────────────────────────────────────────────────
+# 2. Directorio de trabajo
+# ─────────────────────────────────────────────────────────────
 WORKDIR /app
 
-# 1. Config y código
+# ─────────────────────────────────────────────────────────────
+# 3. Copia configuración, datos y acciones
+# ─────────────────────────────────────────────────────────────
 COPY --chown=rasa:rasa \
-  config.yml credentials.yml domain.yml endpoints.yml ./
-COPY --chown=rasa:rasa data    ./data
-COPY --chown=rasa:rasa actions ./actions
-
-# 2. Copia el tar.gz original y repácalo corrigiendo sólo el feature_to_idx_dict
+  config.yml credentials.yml domain.yml endpoints.yml \
+  ./
 COPY --chown=rasa:rasa \
-  models/20250501-095336-crispy-grain.tar.gz \
-  /app/models/
+  data/ ./data
+COPY --chown=rasa:rasa \
+  actions/ ./actions
 
-RUN set -eux; \
-    mkdir -p /app/tmp_model; \
-    tar -xzf /app/models/20250501-095336-crispy-grain.tar.gz -C /app/tmp_model; \
-    mv /app/tmp_model/components/train_LexicalSyntacticFeaturizer2/feature_to_idx_dict.json \
-       /app/tmp_model/components/train_LexicalSyntacticFeaturizer2/feature_to_idx_dict.pkl; \
-    tar -czf /app/models/20250501-095336-crispy-grain-fixed.tar.gz \
-         -C /app/tmp_model .; \
-    rm -rf /app/tmp_model; \
-    mv /app/models/20250501-095336-crispy-grain-fixed.tar.gz \
-       /app/models/20250501-095336-crispy-grain.tar.gz
+# ─────────────────────────────────────────────────────────────
+# 4. Prepara carpeta de modelos y copia el tar.gz parcheado
+# ─────────────────────────────────────────────────────────────
+RUN mkdir -p /app/models
+COPY --chown=rasa:rasa \
+  models/20250501-095336-crispy-grain-patched.tar.gz \
+  /app/models/20250501-095336-crispy-grain.tar.gz
 
-# 3. Entorno y puerto para Render
+# ─────────────────────────────────────────────────────────────
+# 5. Variables de entorno para Rasa/Sanic y Render
+# ─────────────────────────────────────────────────────────────
 ENV RASA_ENVIRONMENT=production \
     SANIC_HOST=0.0.0.0 \
     SANIC_PORT=10000 \
     SANIC_WORKERS=1 \
     PORT=10000
 
+# ─────────────────────────────────────────────────────────────
+# 6. Exponer el puerto y healthcheck
+# ─────────────────────────────────────────────────────────────
 EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:10000/webhooks/rest/webhook || exit 1
 
+# ─────────────────────────────────────────────────────────────
+# 7. Ejecuta como usuario rasa
+# ─────────────────────────────────────────────────────────────
 USER rasa
 ENTRYPOINT []
 
-# 4. Forzar carga del tarball parcheado
-CMD ["rasa","run", \
-     "--model","/app/models/20250501-095336-crispy-grain.tar.gz", \
-     "--enable-api","--cors","*","--port","10000","--debug"]
+# ─────────────────────────────────────────────────────────────
+# 8. Arranque forzando la carga del modelo TAR.gz parcheado
+# ─────────────────────────────────────────────────────────────
+CMD ["rasa", "run", \
+     "--model", "/app/models/20250501-095336-crispy-grain.tar.gz", \
+     "--enable-api", "--cors", "*", \
+     "--port", "10000", "--debug"]
