@@ -19,11 +19,17 @@ RUN mv /app/models/20250501-095336-crispy-grain/metadata.json \
       /app/models/20250501-095336-crispy-grain/model_metadata.json
 
 # 4. Entorno de Sanic/Rasa
-ENV RASA_ENVIRONMENT=production \
-    SANIC_HOST=0.0.0.0 \
-    SANIC_PORT=10000 \
-    SANIC_WORKERS=1 \
-    PORT=10000         # para Render
+# 4. Entorno de Sanic/Rasa y Render
+# 4a. Entorno de Rasa
+ENV RASA_ENVIRONMENT=production
+
+# 4b. Configuración de Sanic
+ENV SANIC_HOST=0.0.0.0
+ENV SANIC_PORT=10000
+ENV SANIC_WORKERS=1
+
+# 4c. Puerto para Render
+ENV PORT=10000
 
 # 5. Puerto + healthcheck
 EXPOSE 10000
