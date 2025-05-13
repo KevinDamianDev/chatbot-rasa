@@ -12,7 +12,7 @@ COPY --chown=rasa:rasa data/ ./data
 COPY --chown=rasa:rasa actions/ ./actions
 
 # 4. Entrena el modelo aquí mismo
-RUN rasa train --no-prompt
+RUN rasa train
 
 # 5. Variables de entorno para Rasa/Sanic
 ENV RASA_ENVIRONMENT=production \
