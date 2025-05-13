@@ -1,23 +1,40 @@
+# 1) Imagen base
 FROM rasa/rasa:3.5.10-full
+
+# 2) Directorio de trabajo
 WORKDIR /app
 
-# Copias
+# 3) Copia de archivos
 COPY --chown=rasa:rasa \
   config.yml credentials.yml domain.yml endpoints.yml \
   data/ actions/ \
-  models/20250501-095336-crispy-grain.tar.gz \
   ./
 
+# 4) Copia tu nuevo modelo retrained
+COPY --chown=rasa:rasa \
+  models/crispy-grain-3.5.10.tar.gz \
+  /app/models/crispy-grain.tar.gz
+
+# 5) Env vars (PORT lo inyecta Render)
 ENV RASA_ENVIRONMENT=production \
     SANIC_WORKERS=1 \
     PORT=10000
 
+# 6) Expone el puerto estático 10000
 EXPOSE 10000
+
+# 7) Usuario no-root
 USER rasa
+
+# 8) Limpia ENTRYPOINT
 ENTRYPOINT []
 
-# Healthcheck con start-period largo
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
+# 9) Healthcheck con start-period amplio para cargar el modelo
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
   CMD curl -f http://localhost:10000/status || exit 1
 
-CMD ["rasa","run","--enable-api","--cors","*","-i","0.0.0.0","-p","10000","--model","./20250501-095336-crispy-grain.tar.gz"]
+# 10) CMD que apunta explicitamente al modelo correcto
+CMD ["rasa","run",
+     "--model","/app/models/crispy-grain.tar.gz",
+     "--enable-api","--cors","*",
+     "-i","0.0.0.0","-p","10000"]
