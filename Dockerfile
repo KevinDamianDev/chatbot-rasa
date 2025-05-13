@@ -1,47 +1,31 @@
-# Stage 1: Entrena el modelo dentro de la imagen Rasa (en el build de Render)
-FROM rasa/rasa:3.5.10-full AS builder
-
-WORKDIR /app
-
-# Copia configuración, datos y acciones
-COPY --chown=rasa:rasa \
-  config.yml credentials.yml domain.yml endpoints.yml \
-  data/ actions/ \
-  ./
-
-# Entrena con la misma versión de Rasa/TensorFlow de producción
-RUN rasa train --quiet
-
-
-# Stage 2: Imagen final que sólo copia el modelo ya entrenado
+# Usa la imagen oficial de Rasa 3.5.10
 FROM rasa/rasa:3.5.10-full
 
+# Trabajamos como root para copiar archivos
+USER root
 WORKDIR /app
 
-# Copia configs, datos, acciones
+# 1) Copia la configuración y tu data
 COPY --chown=rasa:rasa \
   config.yml credentials.yml domain.yml endpoints.yml \
-  data/ actions/ \
   ./
 
-# Trae el modelo generado en el primer stage
-COPY --from=builder /app/models /app/models
+# 2) Copia tu carpeta de datos NLU & stories
+COPY --chown=rasa:rasa data/ data/
 
-# Variables de entorno
-ENV RASA_ENVIRONMENT=production \
-    SANIC_WORKERS=1 \
-    PORT=10000
+# 3) Copia tu modelo pre-entrenado (renómbralo localmente a model.tar.gz)
+COPY --chown=rasa:rasa \
+  models/crispy-grain-3.5.10.tar.gz \
+  models/model.tar.gz
 
-# Exponer puerto
+# 4) Copia tus acciones personalizadas
+COPY --chown=rasa:rasa actions/ actions/
+
+# 5) Cambia al usuario rasa (la imagen oficial lo espera así)
+USER rasa
+
+# 6) Expone el puerto en el que Rasa verá tráfico
 EXPOSE 10000
 
-# Usa usuario rasa sin entrypoint heredado
-USER rasa
-ENTRYPOINT []
-
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
-  CMD curl -f http://localhost:10000/status || exit 1
-
-# Arranca el servidor; Rasa detectará el modelo dentro de /app/models automáticamente
-CMD ["rasa","run","--enable-api","--cors","*","-i","0.0.0.0","-p","10000"]
+# 7) Arranca Rasa apuntando explícito al modelo dentro de /app/models
+CMD ["rasa","run","--model","/app/models/model.tar.gz","--enable-api","--cors","*","-i","0.0.0.0","-p","10000"]
