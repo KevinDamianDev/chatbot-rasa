@@ -1,30 +1,34 @@
-# 1. Imagen base oficial de Rasa
+# 1. Base
 FROM rasa/rasa:3.5.10-full
 
-# 2. Directorio de trabajo
+# 2. Forzar bust de cache (cámbialo cuando vuelvas a push)
+ARG CACHEBUST=1
+
+# 3. Trabajo
 WORKDIR /app
 
-# 3. Copia de configuración, datos y acciones
+# 4. Copia fuentes
 COPY --chown=rasa:rasa config.yml credentials.yml domain.yml endpoints.yml ./
 COPY --chown=rasa:rasa data/ ./data
 COPY --chown=rasa:rasa actions/ ./actions
 
-# 4. Entrena el modelo durante el build
+# 5. Entrena modelo
 RUN rasa train
 
-# 5. Variables de entorno para Rasa/Sanic (PORT lo setea Render)
+# 6. Variables (PORT inyectado por Render)
 ENV RASA_ENVIRONMENT=production \
     SANIC_WORKERS=1 \
     PORT=10000
 
-# 6. Expone el puerto que usa Render (igual al interno)
+# 7. Expone el puerto que acuerdas con internalPort
 EXPOSE 10000
 
-# 7. Ejecuta como el usuario rasa
+# 8. Privilegios
 USER rasa
 
-# 8. Limpia el entrypoint de la imagen base
+# 9. Quita entrypoint base
 ENTRYPOINT []
 
-# 9. Shell-CMD para que $PORT se expanda correctamente en runtime
+# 10. **Shell-CMD**: aquí $PORT se expande en runtime
+#     NOTA: no uses JSON array, sino shell form.
 CMD rasa run -i 0.0.0.0 -p $PORT --enable-api --cors "*" --debug
