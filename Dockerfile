@@ -1,10 +1,10 @@
-# 1) Base image oficial Rasa
+# 1) Usa la imagen oficial de Rasa
 FROM rasa/rasa:3.5.10-full
 
-# 2) Directorio de trabajo en contenedor
+# 2) Ponemos /app como directorio de trabajo
 WORKDIR /app
 
-# 3) Copia de tu configuración, datos, acciones y modelo ya entrenado
+# 3) Copiamos todo lo necesario (config, datos, acciones y modelo ya entrenado)
 COPY --chown=rasa:rasa \
     config.yml \
     credentials.yml \
@@ -15,18 +15,8 @@ COPY --chown=rasa:rasa \
     models/crispy-grain-3.5.10.tar.gz \
     /app/
 
-# 4) Indica a Docker que el contenedor usará el puerto 10000
+# 4) Exponemos el puerto que usaremos
 EXPOSE 10000
 
-# 5) Asegúrate de arrancar con el entrypoint correcto
-ENTRYPOINT ["rasa"]
-
-# 6) Y pásale SOLO los argumentos de 'run' (no dupliques "rasa")
-CMD [
-  "run",
-  "--model", "/app/crispy-grain-3.5.10.tar.gz",
-  "--enable-api",
-  "--cors", "*",
-  "-i", "0.0.0.0",
-  "-p", "10000"
-]
+# 5) Arrancamos Rasa TODO en una sola línea (evita errores de parseo)
+CMD ["rasa","run","--model","/app/crispy-grain-3.5.10.tar.gz","--enable-api","--cors","*","-i","0.0.0.0","-p","10000"]
