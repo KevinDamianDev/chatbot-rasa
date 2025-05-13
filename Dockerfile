@@ -16,19 +16,17 @@ RUN rasa train
 
 # 5. Variables de entorno para Rasa y Sanic
 ENV RASA_ENVIRONMENT=production \
-    SANIC_HOST=0.0.0.0 \
-    SANIC_PORT=10000 \
     SANIC_WORKERS=1 \
     PORT=10000
 
-# 6. Expone el puerto que usa Render (10000)
+# 6. Expone el puerto que usa Render
 EXPOSE 10000
 
 # 7. Ejecuta como el usuario rasa
 USER rasa
 
-# 8. Anula el ENTRYPOINT de la imagen base 
+# 8. Limpia el ENTRYPOINT de la imagen base
 ENTRYPOINT []
 
-# 9. Arranca el servidor Rasa con la API habilitada
-CMD ["rasa", "run", "--enable-api", "--cors", "*", "--port", "10000", "--debug"]
+# 9. Arranca Rasa escuchando en 0.0.0.0:10000
+CMD ["rasa", "run", "--enable-api", "--cors", "*", "--host", "0.0.0.0", "--port", "10000", "--debug"]
