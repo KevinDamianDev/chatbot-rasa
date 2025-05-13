@@ -1,34 +1,37 @@
-# 1. Base
+# 1. Base image
 FROM rasa/rasa:3.5.10-full
 
-# 2. Forzar bust de cache (cámbialo cuando vuelvas a push)
+# 2. Cache bust (cámbialo cuando vuelvas a push para invalidar caché)
 ARG CACHEBUST=1
 
-# 3. Trabajo
+# 3. Set workdir
 WORKDIR /app
 
-# 4. Copia fuentes
+# 4. Copy your files
 COPY --chown=rasa:rasa config.yml credentials.yml domain.yml endpoints.yml ./
 COPY --chown=rasa:rasa data/ ./data
 COPY --chown=rasa:rasa actions/ ./actions
 
-# 5. Entrena modelo
+# 5. Train model at build time
 RUN rasa train
 
-# 6. Variables (PORT inyectado por Render)
+# 6. Env vars (Render inyecta PORT automáticamente)
 ENV RASA_ENVIRONMENT=production \
     SANIC_WORKERS=1 \
     PORT=10000
 
-# 7. Expone el puerto que acuerdas con internalPort
-EXPOSE 10000
+# 7. Expose the dynamic port
+EXPOSE $PORT
 
-# 8. Privilegios
+# 8. User
 USER rasa
 
-# 9. Quita entrypoint base
+# 9. Clear base image ENTRYPOINT
 ENTRYPOINT []
 
-# 10. **Shell-CMD**: aquí $PORT se expande en runtime
-#     NOTA: no uses JSON array, sino shell form.
-CMD rasa run -i 0.0.0.0 -p $PORT --enable-api --cors "*" --debug
+# 10. Healthcheck so Render sees readiness
+HEALTHCHECK --interval=15s --timeout=5s --start-period=5s \
+  CMD curl -f http://localhost:$PORT/status || exit 1
+
+# 11. CMD as JSON calling `sh -c` to expand $PORT
+CMD ["sh", "-c", "echo \"==> Listening on 0.0.0.0:$PORT\" && rasa run --enable-api --cors \"*\" -i 0.0.0.0 -p $PORT --debug"]
