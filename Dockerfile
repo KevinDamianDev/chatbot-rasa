@@ -5,9 +5,7 @@ FROM rasa/rasa:3.5.10-full
 WORKDIR /app
 
 # 3. Copia de configuración, datos y acciones
-COPY --chown=rasa:rasa \
-  config.yml credentials.yml domain.yml endpoints.yml \
-  ./
+COPY --chown=rasa:rasa config.yml credentials.yml domain.yml endpoints.yml ./
 COPY --chown=rasa:rasa data/ ./data
 COPY --chown=rasa:rasa actions/ ./actions
 
@@ -25,13 +23,8 @@ EXPOSE 10000
 # 7. Ejecuta como el usuario rasa
 USER rasa
 
-# 8. Limpia el ENTRYPOINT de la imagen base
+# 8. Anula el ENTRYPOINT de la imagen base
 ENTRYPOINT []
 
-# 9. Arranca Rasa escuchando en todas las interfaces (-i) y en el puerto 10000 (-p)
-CMD ["rasa", "run",
-     "-i", "0.0.0.0",
-     "-p", "10000",
-     "--enable-api",
-     "--cors", "*",
-     "--debug"]
+# 9. Arranca Rasa escuchando en todas las interfaces y en el puerto 10000
+CMD ["rasa", "run", "-i", "0.0.0.0", "-p", "10000", "--enable-api", "--cors", "*", "--debug"]
