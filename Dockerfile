@@ -14,7 +14,7 @@ COPY --chown=rasa:rasa actions/ ./actions
 # 4. Entrena el modelo durante el build
 RUN rasa train
 
-# 5. Variables de entorno para Rasa y Sanic
+# 5. Variables de entorno para Rasa/Sanic
 ENV RASA_ENVIRONMENT=production \
     SANIC_WORKERS=1 \
     PORT=10000
@@ -28,5 +28,10 @@ USER rasa
 # 8. Limpia el ENTRYPOINT de la imagen base
 ENTRYPOINT []
 
-# 9. Arranca Rasa escuchando en 0.0.0.0:10000
-CMD ["rasa", "run", "--enable-api", "--cors", "*", "--host", "0.0.0.0", "--port", "10000", "--debug"]
+# 9. Arranca Rasa escuchando en todas las interfaces (-i) y en el puerto 10000 (-p)
+CMD ["rasa", "run",
+     "-i", "0.0.0.0",
+     "-p", "10000",
+     "--enable-api",
+     "--cors", "*",
+     "--debug"]
